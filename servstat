@@ -56,7 +56,7 @@ my ($port) = @_;
 
 sub check_proc {
 my ($proc) = @_;
-if(`ps -aef | grep -v grep|grep $proc`) {
+if(`ps -aef | grep -v grep|grep \"$proc\"`) {
     return 1;
 }
 return 0
