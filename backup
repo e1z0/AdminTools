@@ -1,0 +1,135 @@
+#!/bin/bash
+# Simple System backup utility
+# Copyright (c) 2009-2013 justinas@eofnet.lt
+# 1.0 First public version
+# 1.1 Implemented 7zip compression
+# 1.2 Implemented xtrabackup support for mysql
+# 1.3 Implemented encryption using openssl
+# 1.4 Implemented last backup archiving
+ver=1.4
+
+############# CONFIGURATION ################
+# Where to backup ? (DIR)
+STORE=/backups
+# date/time format
+# 2013.10.19_02-30-18
+TDATE=`date +%Y.%m.%d_%H-%M-%S`
+# directories to backup, will read line by line from text document
+FBAK=dirbak.txt
+# mysql databases to backup, will read line by line from text document, or you can simply use "ALL" option to backup all databases
+#DBAK=sqlbak.txt
+DBAK=ALL
+# compression default 7z
+CPR="tar cfpz"
+# ecpryption 
+# ex.: openssl aes-128-cbc -salt -in dump-stable.sql.tar.gz -out dump-stable.sql.tar.gz.aes -k 123456 
+ENC="openssl aes-128-cbc -salt -in"
+PASS="password"
+# decrypt: openssl aes-128-cbc -d -salt -in backup.tar.gz.aes -out backup.restored.tar.gz
+# implement split to 2GB files with 7z
+#CPR="7z a -mx9 -v1942m -t7z"
+# EXTRACT: tar xvfj archive_name.tar.bz2
+############################################
+# get current directory where script is running
+CDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+backup_last() {
+if [ -f "$CDIR/last_bak" ]; then
+DT=`cat "$CDIR/last_bak"`
+echo "Last backup date: $DT"
+else
+echo "Last backup timestamp does not exist, creating..."
+echo "$TDATE" > "$CDIR/last_bak"
+echo "Last backup timestamp created: $TDATE"
+fi
+}
+
+backup_last_set() {
+echo "$TDATE" > "$CDIR/last_bak"
+echo "Last backup timestamp created: $TDATE"
+}
+
+backup_mysqldb_all() {
+DT=`cat "$CDIR/last_bak"`
+if [ -f "$STORE/databases-$DT.tar.gz" ]; then
+# backup old database files
+echo "Encrypting databases..."
+$ENC $STORE/databases-$DT.tar.gz -out $STORE/databases-$DT.tar.gz.aes -k $PASS
+rm $STORE/databases-$DT.tar.gz
+echo "Uploading databases..."
+rsync -av --progress --password-file=$HOME/.rsync.passwd $STORE/databases-$DT.tar.gz.aes root@remote-server::storage
+rm $STORE/databases-$DT.tar.gz.aes
+fi
+# backup new database files
+echo "XtraBackuping databases..."
+xtrabackup --backup --target-dir=$STORE/databases-$TDATE/ > /dev/null 2>&1
+echo "Compressing databases..."
+$CPR $STORE/databases-$TDATE.tar.gz $STORE/databases-$TDATE/ > /dev/null 2>&1
+rm -rf $STORE/databases-$TDATE/
+}
+
+backup_mysqldb_split() {
+# backup sql databases one by one
+filename="$1"
+while read -r line
+do
+    echo "Dumping database: $line"
+    mysqldump --force --databases $line > $STORE/$line-$TDATE.sql
+    echo "Compressing database..."
+    $CPR $STORE/$line-$TDATE.sql.tar.gz $STORE/$line-$TDATE.sql > /dev/null 2>&1
+    rm $STORE/$line-$TDATE.sql
+done < "$filename"
+}
+
+backup_dirs() {
+filename="$1"
+DT=`cat "$CDIR/last_bak"`
+while read -r line
+do
+# dirty hack with SED :|
+if [ -d "$line" ]; then
+    sedfile=`echo $line |sed 's/\///'`
+    sedfile=`echo $sedfile |sed 's/\//./g'`
+    echo "Backing up and compressing directory: $line ..."
+if [ -f "$STORE/$sedfile-$DT.tar.gz" ]; then
+# backup old data files
+    $ENC $STORE/$sedfile-$DT.tar.gz -out $STORE/$sedfile-$DT.tar.gz.aes -k $PASS
+    rm $STORE/$sedfile-$DT.tar.gz
+    rsync -av --progress --password-file=$HOME/.rsync.passwd $STORE/$sedfile-$DT.tar.gz.aes root@remote-server::storage
+    rm $STORE/$sedfile-$DT.tar.gz.aes
+fi
+# backuping new data files
+$CPR $STORE/$sedfile-$TDATE.tar.gz $line > /dev/null 2>&1
+fi
+done < "$filename"
+}
+
+if [ $(id -u) -eq 0 ]; then
+echo "Starting EofNET Backup Script $ver"
+echo "The script is running from $CDIR directory"
+if [ ! -d "$STORE" ]; then
+ echo "Backup destination, does not exist, creating.."
+ mkdir -p $STORE
+fi
+if [ ! -f "$CDIR/$DBAK" -a "$DBAK" != "ALL" ]; then
+ echo "The backup file $CDIR/$DBAK does not exist"
+ echo "Please create one and insert into it databases you want to backup, line by line"
+ exit 1
+fi
+if [ ! -f "$CDIR/$FBAK" ]; then
+ echo "The backup file $CDIR/$FBAK does not exist"
+ echo "Please create one and insert into it the directories you want to backup, line by line"
+ exit 1
+fi
+backup_last
+if [ "$DBAK" == "ALL" ]; then
+        backup_mysqldb_all
+                else
+                backup_mysqldb_split $CDIR/$DBAK
+        fi
+backup_dirs $CDIR/$FBAK
+chmod -R 600 $STORE
+backup_last_set
+else
+echo "You must to be root to run this script"
+fi
