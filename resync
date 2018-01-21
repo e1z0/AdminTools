@@ -1,0 +1,6 @@
+#!/bin/bash
+# resync data between server nodes
+# 2018 (c) justinas@eofnet.lt
+echo "Re-sync data from node1 to node2"
+export LC_ALL=en_US.UTF-8
+rsync -zrtuWHog --info=progress2 --iconv=UTF8,UTF8 root@node1:/data /data
