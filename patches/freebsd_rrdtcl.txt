@@ -1,0 +1,10 @@
+rrdtcl bindings are poorly ported to freebsd 5.X branch but if you want to fix it do that in the folowing steps
+
+1. First you need tcl 8.4 libs
+2. Then go to /usr/ports/net/rrdtool and edit file Makefile search for line CONFIGURE_ARGS= add 
+"--with-tcllib=/usr/local/lib/tcl8.4" at the end of line.
+3. Try to compile
+4. If error accours that cant find tcl.h then you need to edit 
+/usr/ports/net/rrdtool/work/rrdtool-1.2.19/bindings/tclrrd.c and change line "#include <tcl.h>" to "#include 
+</usr/local/include/tcl8.4/generic/tcl.h>
+then go to /usr/ports/net/rrdtool/ and try to make again without cleaning. It works :-)

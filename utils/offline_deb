@@ -1,0 +1,75 @@
+#!/bin/bash
+# Offline .deb packages tool v0.2 by \dev\null. EofNET LAB06.
+# Copyright (c) 2011 EofNET Networks.
+
+
+# PACKAGE LIST TO DOWNLOAD !!! ## EDIT HERE ## !!!
+LIST="lxde fluxbox aclock.app addresses-goodies-for-gnustep addresses.framework addressmanager.app addressview.framework adun.app agenda.app batmon.app biococoa.app camera.app cenon.app charmap.app cynthiune.app dictionaryreader.app displaycalibrator.app easydiff.app edenmath.app ftp.app gnustep gnustep-back-common gnustep-base-common gnustep-base-doc gnustep-base-examples gnustep-base-runtime gnustep-common gnustep-core-devel gnustep-core-doc gnustep-devel gnustep-examples gnustep-games gnustep-gpbs gnustep-gui-common gnustep-gui-doc gnustep-gui-runtime gnustep-icons gnustep-make gnustep-make-doc gomoku.app gorm.app gridlock.app grr.app gtamsanalyzer.app gworkspace.app helpviewer.app latex.service libaddresses-dev libaddresses0 libaddressview-dev libaddressview0 libbiococoa-dev libbiococoa2 libgnustep-base-dev libgnustep-base1.20 libgnustep-base1.20-dbg libgnustep-gui-dev libgnustep-gui0.18 libgnustep-gui0.18-dbg libnetclasses-dev libnetclasses0 libpantomime1.2 libpantomime1.2-dev libpopplerkit-dev libpopplerkit0 librenaissance0 librenaissance0-dev libsteptalk-dev libsteptalk0 lusernet.app lynkeos.app mines.app mknfonts.tool mpdcon.app open.app plopfolio.app preview.app price.app projectcenter.app projectmanager.app renaissance-doc rssreader.app shisen.app steptalk stepulator.app systempreferences.app talksoup.app terminal.app textedit.app timemon.app viewpdf.app volumecontrol.app wrapperfactory.app gnome-shell e17 e17-data icewm"
+
+RELEASE=`lsb_release -c|awk '{print $2}'`
+
+
+function showhelp {
+echo "Offline .deb packages tool v0.2 by \dev\null. EofNET LAB06."
+echo "This tool will help you to download packages with all dependencies and then install them on offline system"
+echo ""
+echo "-r -- Download repository"
+echo "-g -- Generate package list"
+echo "-d -- Download packages"
+echo "-i -- Install packages on offline system"
+}
+
+
+if [ "$1" == "" ]; then
+showhelp
+exit
+fi
+
+if [ "$1" == "-r" ]; then
+if [ ! -d repositories ]; then
+mkdir repositories
+fi
+cd repositories
+wget http://archive.ubuntu.com/ubuntu/dists/${RELEASE}/main/binary-i386/Release
+mv Release archive.ubuntu.com_ubuntu_dists_${RELEASE}_Release
+
+wget http://archive.ubuntu.com/ubuntu/dists/${RELEASE}/main/binary-i386/Packages.bz2
+bunzip2 Packages.bz2
+mv Packages archive.ubuntu.com_ubuntu_dists_${RELEASE}_main_binary-i386_Packages
+
+wget http://archive.ubuntu.com/ubuntu/dists/${RELEASE}/restricted/binary-i386/Packages.bz2
+bunzip2 Packages.bz2
+mv Packages archive.ubuntu.com_ubuntu_dists_${RELEASE}_restricted_binary-i386_Packages
+
+wget http://archive.ubuntu.com/ubuntu/dists/${RELEASE}/universe/binary-i386/Packages.bz2
+bunzip2 Packages.bz2
+mv Packages archive.ubuntu.com_ubuntu_dists_${RELEASE}_universe_binary-i386_Packages
+
+wget http://archive.ubuntu.com/ubuntu/dists/${RELEASE}/multiverse/binary-i386/Packages.bz2
+bunzip2 Packages.bz2
+mv Packages archive.ubuntu.com_ubuntu_dists_${RELEASE}_multiverse_binary-i386_Packages
+fi
+
+
+if [ "$1" == "-i" ]; then
+if [ "$(whoami)" != 'root' ]; then
+echo "you are using a non-privileged account run this script with sudo command"
+exit 1
+fi
+echo "Installing packages..."
+dpkg -i packages/*.deb
+fi
+
+if [ "$1" == "-d" ]; then
+if [ ! -d packages ]; then
+mkdir packages
+fi
+cd packages
+wget -c --progress=bar -i ../apt_list
+fi
+
+if [ "$1" == "-g" ]; then
+echo "Generating url list..."
+apt-get -qq --print-uris install $LIST|awk '{gsub("\x27", "", $0); print $1}' > apt_list
+echo "Done."
+fi

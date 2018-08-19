@@ -1,0 +1,38 @@
+#!/bin/bash
+# Apache automatic restart tool for heavy loaded servers
+# script is for restart apache web server daemon 
+# if script gets no info from web server it will automatically restart apache htttpd process and send notification email
+# 2009 EofNET LAB06. All Rights Reserved.
+
+# status.php example
+# <? header("Content-Type: text/plain"); echo "running"; ?>
+
+# Configuration
+SENDMAIL="/usr/sbin/sendmail"	      # sendmail for sending emails to admin
+ADMIN="admin@eofnet.lt"		      # sysadmin email
+HTTPD="/usr/sbin/httpd"               # apache httpd daemon
+SLEEP=30 			      # check cycle interval
+TIMEOUT=10 			      # check timeout
+URL='http://localhost/status.php'     # url to get info
+MATCH='running'                       # if script will not get this string from url it will restart apache
+
+
+
+function apache_restart {
+echo "Restarting apache"
+killall httpd
+killall -9 httpd
+kill -9 `ps aux|grep httpd|awk '{print $1}'`
+$HTTPD -k start -DSSL
+}
+
+while true ; do
+wget -q -O - -T $TIMEOUT --tries=1 "$URL" | grep -q "$MATCH" || {
+echo "Apache WebServer is not running at host `hostname`"|sendmail -t $ADMIN
+apache_restart && {
+echo "Server Restarted"
+}
+}
+sleep $SLEEP
+done
+

@@ -1,0 +1,48 @@
+#!/bin/bash
+# this tool will list tar, tar.gz and tar.bz2 archive contents
+# 2012 (c) \dev\null
+# Version 1.0 
+
+function badparm {
+echo "Bad parameter please see: $0 --help"
+exit 1
+}
+
+function help {
+echo "Welcome to tar tool help!"
+echo ""
+echo "Type $0 filename [options]"
+echo "Options:"
+echo "--help --- Shows this screen"
+echo "--search [parameter] --- searches file inside archive"
+exit 0
+}
+
+if [ "$1" == "" ]; then
+badparm
+elif [ "$1" == "--help" ]; then
+help
+fi
+
+if [ -f "$1" ]; then
+ARCH="$1"
+EXT=`echo "$1" | sed 's/^.*\.//'`
+#echo "Listing file $1 with extension $EXT"
+# BEGIN CHECKING TAR.GZ
+if [ "$EXT" == "gz" ]; then
+if [ "$2"  == "--search" ] && [ "$3" != "" ]; then
+echo "Found results in arhive: "
+tar -ztf "$1"|awk '{print tolower($0)}'|grep "$3"
+else
+echo "Archive contents:"
+tar -ztf "$1" | awk '{print tolower($0)}'
+fi
+fi
+# END OF TAR.GZ
+
+
+
+else
+echo "Bad file specified!"
+fi
+# iskerpam galunes ilgi tar.gz jeigu tai toks galunes ilgis vedam i funkcija kuri listina archyva jeigu galas tar vedam i kita funkcija

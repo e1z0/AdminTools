@@ -1,0 +1,6 @@
+#!/bin/sh
+cd /home/devnull/rrd_project
+ipv4=`netstat -4|wc -l`
+ipv6=`netstat -n|wc -l`
+
+rrdtool update connections.rrd -t ipv4:ipv6 N:$ipv4:$ipv6

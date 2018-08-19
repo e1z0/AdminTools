@@ -1,0 +1,50 @@
+#!/bin/sh
+# This script is for blocking IP traffic from TOR exit nodes.
+# v0.2 - Bugfixed errors than to many rules need to unblock
+# v0.1 - Initial public release
+# At the time only FreeBSD 7.X ipfw is supported, in future versions we will implement iptables and packet filter support.
+# 2005-2008 EofNET Networks lab06 (justinas@eofnet.lt)
+
+wget=`which wget` # wget
+ipfw=`which ipfw` # ipfw
+url='https://torstat.xenobite.eu/export/tor_exitnodes.csv'
+
+target='-q add deny ip from'
+target2='to any'
+regex='deny'
+
+if [ $1 ]; then
+if [ $1 = "block" ]; then
+echo "Blocking lamers from teh internets.."
+for node in `$wget -q --no-check-certificate -O - $url | sort | uniq`; do
+$ipfw $target $node $target2
+done
+elif [ $1 = "unblock" ]; then
+echo "Why are you doing this man ?"
+echo "Okay that will be done.."
+_tmp=/tmp/ipfwcl
+COUNTER=0
+ipfwlist=`ipfw list|grep $regex|wc -l`
+ipfw list|grep deny > $_tmp
+         while [  $COUNTER -lt $ipfwlist ]; do
+        COUNTER=$((COUNTER+1))
+        line=`sed -n $COUNTER"p" $_tmp|awk '{print $1}'`
+        ipfw delete $line
+	if [ $line = "65500" ]; then
+        exit
+    fi
+done
+echo "Operation Complete! Deleted: $ipfwlist rules ;-)"
+rm /tmp/ipfwcl
+elif [ $1 = "status" ]; then
+echo -n "How many lammers are banned ? "
+$ipfw list|grep "$regex"|wc -l
+else
+echo "Are you blind ? wtf"
+fi
+else
+echo "   TOR USERS MUST DIE!!! ;-)"
+echo "block   - blocks stupid TOR users"
+echo "unblock - unblocks all lamers"
+echo "status  - shows how many tor IPs is banned"
+fi

@@ -1,0 +1,67 @@
+#!/bin/bash
+
+rrdtool=/usr/bin/rrdtool
+db=connections.rrd
+img=/home/devnull/public_html/graph
+
+
+
+
+if [ ! -e $db ]
+then 
+	$rrdtool create $db \
+         --start 1023654125 \
+         --step 300 \
+        DS:ipv4:GAUGE:600:0:671744 \
+	DS:ipv6:GAUGE:600:0:671744 \
+	RRA:AVERAGE:0.5:1:576 \
+	RRA:AVERAGE:0.5:6:672 \
+	RRA:AVERAGE:0.5:24:732 \
+	RRA:AVERAGE:0.5:144:1460
+fi
+
+
+
+
+
+
+
+for period in day week month year
+do
+	$rrdtool graph $img/connections-$period.png -s -1$period \
+	-t "Connections the last $period" -z \
+	-c "BACK#FFFFFF" -c "SHADEA#FFFFFF" -c "SHADEB#FFFFFF" \
+	-c "MGRID#AAAAAA" -c "GRID#CCCCCC" -c "ARROW#333333" \
+	-c "FONT#333333" -c "AXIS#333333" -c "FRAME#333333" \
+        -h 134 -w 543 -l 0 -a PNG -v "count" \
+	DEF:ipv4=$db:ipv4:AVERAGE \
+	DEF:ipv6=$db:ipv6:AVERAGE \
+	VDEF:minin=ipv4,MINIMUM \
+	VDEF:minout=ipv6,MINIMUM \
+	VDEF:maxin=ipv4,MAXIMUM \
+	VDEF:maxout=ipv6,MAXIMUM \
+	VDEF:avgin=ipv4,AVERAGE \
+	VDEF:avgout=ipv6,AVERAGE \
+	VDEF:lstin=ipv4,LAST \
+	VDEF:lstout=ipv6,LAST \
+	"COMMENT: \l" \
+	"COMMENT:               " \
+	"COMMENT:Minimum      " \
+	"COMMENT:Maximum      " \
+	"COMMENT:Average      " \
+	"COMMENT:Current      " \
+	"COMMENT:   " \
+	"AREA:ipv6#EDA362:Ipv6  " \
+	"LINE1:ipv6#F47200" \
+	"GPRINT:minout:%5.1lf %sB/s   " \
+	"GPRINT:maxout:%5.1lf %sB/s   " \
+	"GPRINT:avgout:%5.1lf %sB/s   " \
+	"GPRINT:lstout:%5.1lf %sB/s   " \
+	"COMMENT:   " \
+	"AREA:ipv4#8AD3F1:Ipv4   " \
+	"LINE1:ipv4#49BEEF" \
+	"GPRINT:minin:%5.1lf %sB/s   " \
+	"GPRINT:maxin:%5.1lf %sB/s   " \
+	"GPRINT:avgin:%5.1lf %sB/s   " \
+	"GPRINT:lstin:%5.1lf %sB/s   "
+done

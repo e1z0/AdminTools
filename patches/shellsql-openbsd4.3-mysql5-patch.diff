@@ -1,0 +1,36 @@
+--- traperr.c.orig      Fri Aug 15 22:52:17 2008
++++ traperr.c   Fri Aug 15 22:49:18 2008
+@@ -77,7 +77,7 @@
+        if(signal(SIGUSR2, trap_handler) == SIG_ERR) i = -1;
+
+        if(signal(SIGBUS, trap_handler) == SIG_ERR) i = -1;
+-       if(signal(SIGPOLL, trap_handler) == SIG_ERR) i = -1;
++/*     if(signal(SIGPOLL, trap_handler) == SIG_ERR) i = -1; */
+        if(signal(SIGPROF, trap_handler) == SIG_ERR) i = -1;
+        if(signal(SIGSYS, trap_handler) == SIG_ERR) i = -1;
+        if(signal(SIGTRAP, trap_handler) == SIG_ERR) i = -1;
+@@ -86,10 +86,10 @@
+        if(signal(SIGXFSZ, trap_handler) == SIG_ERR) i = -1;
+
+        if(signal(SIGIOT, trap_handler) == SIG_ERR) i = -1;
+-       if(signal(SIGSTKFLT, trap_handler) == SIG_ERR) i = -1;
++/*     if(signal(SIGSTKFLT, trap_handler) == SIG_ERR) i = -1; */
+        if(signal(SIGIO, trap_handler) == SIG_ERR) i = -1;
+-       if(signal(SIGPWR, trap_handler) == SIG_ERR) i = -1;
+-       if(signal(SIGUNUSED, trap_handler) == SIG_ERR) i = -1;
++/*     if(signal(SIGPWR, trap_handler) == SIG_ERR) i = -1; */
++/*     if(signal(SIGUNUSED, trap_handler) == SIG_ERR) i = -1; */
+
+        return i;
+ }
+--- shmysql.c.orig      Fri Aug 15 22:38:29 2008
++++ shmysql.c   Fri Aug 15 22:45:03 2008
+@@ -32,7 +32,7 @@
+ #include <stdio.h>
+ #include <sys/types.h>
+ #include <unistd.h>
+-#include <mysql.h>
++#include </usr/local/include/mysql/mysql.h>
+ #include <signal.h>
+ #include <ctype.h>
+ #include <fcntl.h>

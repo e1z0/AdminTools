@@ -1,0 +1,18 @@
+#!/bin/sh
+# Clear IPFW script 2007 by justinas@eofnet.lt
+
+# Please specify rule to massive delete!
+rule="deny" # Deny out, in, from, to and so on ;-)
+# Code begins here
+_tmp=/tmp/ipfwcl
+COUNTER=0
+ipfwlist=`ipfw list|grep $rule|wc -l`
+ipfw list|grep $rule > $_tmp
+         while [  $COUNTER -lt $ipfwlist ]; do
+	COUNTER=$((COUNTER+1))
+        line=`sed -n $COUNTER"p" $_tmp|awk '{print $1}'`
+	echo "Deleting rule: $line from line: $COUNTER"
+done
+
+echo "Operation Complete! Deleted: $ipfwlist rules :-)"
+rm /tmp/ipfwcl

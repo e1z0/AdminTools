@@ -1,0 +1,28 @@
+--- ps.c.orig	Sat Aug  9 10:38:59 2008
++++ ps.c	Sat Aug  9 10:46:04 2008
+@@ -222,12 +222,13 @@
+ 			break;
+ 		}
+ 		case 'U':
++			if (getuid() == 0) {                	
+ 			pwd = getpwnam(optarg);
+-			if (pwd == NULL)
++		        	if (pwd == NULL)
+ 				errx(1, "%s: no such user", optarg);
+-			uid = pwd->pw_uid;
+-			endpwent();
++				uid = pwd->pw_uid;
+ 			Uflag = xflg = 1;
++			}
+ 			break;
+ 		case 'u':
+ 			parsefmt(ufmt);
+@@ -259,7 +260,7 @@
+ 		}
+ 	argc -= optind;
+ 	argv += optind;
+-
++if (getuid() != 0) all = 0;
+ #define	BACKWARD_COMPATIBILITY
+ #ifdef	BACKWARD_COMPATIBILITY
+ 	if (*argv) {

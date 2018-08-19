@@ -1,0 +1,9 @@
+#!/bin/sh
+
+rrdtool create connections.rrd \
+         --start 1023654125 \
+         --step 300 \
+         DS:ipv4:GAUGE:600:0:671744 \
+         DS:ipv6:GAUGE:600:0:671744 \
+         RRA:AVERAGE:0.5:12:24 \
+         RRA:AVERAGE:0.5:288:31

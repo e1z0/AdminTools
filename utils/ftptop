@@ -1,0 +1,25 @@
+#!/bin/sh
+# ftptop for vsftpd v0.1 by justinas@eofnet.lt.
+if [ $1 ]; then
+if [ $1 = "-c" ]; then
+ echo "Current number of connections to your ftp server are: `ps ax | grep vsftpd | grep connected | grep -v grep|wc -l`"
+elif [ $1 = "-u" ]; then
+ echo "Current connected users:"
+ps ax -o pid,command|grep vsftpd|grep connected|grep -v grep
+elif [ $1 = "-k" ]; then
+ echo "User actions on ftp server:"
+ps ax -o pid,command|grep vsftpd|grep "/ftp:"|grep -v grep
+elif [ $1 = "-s" ]; then
+watch -n 1 -t 'echo "-- VSFTPD Server Monitoring --";ps ax | grep vsftpd | grep -v grep'
+else
+echo "Bad Parameter"
+fi
+else
+echo "ftptop for vsftpd v0.1 2006 by justinas@eofnet.lt."
+echo "The folowing commands are available:"
+echo "-c Show number of connections"
+echo "-u List of users connected"
+echo "-k User actions"
+echo "-s Show server status in 1sec interval"
+fi
+
