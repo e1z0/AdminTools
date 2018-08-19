@@ -1,0 +1,6 @@
+SERVER: iperf -s -B 192.168.1.3
+CLIENT: iperf -c 84.32.72.198 -d -t 60 -i 10
+
+NORMAL TEST:
+on blast pit: iperf -c tp.eofnet.lt -t 60 -i 10
+on tplink network: iperf -s -B 192.168.0.101

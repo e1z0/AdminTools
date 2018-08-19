@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# SCAN TECHNIQUES:
+#  -sS/sT/sA/sW/sM: TCP SYN/Connect()/ACK/Window/Maimon scans
+#  -sU: UDP Scan
+#  -sN/sF/sX: TCP Null, FIN, and Xmas scans
+#  --scanflags <flags>: Customize TCP scan flags
+#  -sI <zombie host[:probeport]>: Idle scan
+#  -sY/sZ: SCTP INIT/COOKIE-ECHO scans
+#  -sO: IP protocol scan
+#  -b <FTP relay host>: FTP bounce scan
+# Please choose only one of -sA, -b, -sT, -sF, -sI, -sM, -sN, -sS, -sW, and -sX
+
+TECH="sS"
+
+sudo nmap -vvv -PN -$TECH -p- -sV --allports -O -T5 -oN scan-output.txt $1
